@@ -50,6 +50,9 @@
   "Face used to highlight line number in the *helm-cscope* buffer."
   :group 'helm-cscope)
 
+(defconst helm-cscope--parse-regexp
+  "\\`\\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\(.*\\)")
+
 (defun helm-cscope--search (dir db-name search-type-arg &optional args)
   (let ((cmd-args (list "-f" db-name "-L"
                         search-type-arg (concat helm-pattern ".*"))))
@@ -115,7 +118,7 @@
     (beginning-of-line)))
 
 (defun helm-cscope--open-file (dir line &optional persistent)
-  (when (string-match "\\`\\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\(.*\\)" line)
+  (when (string-match helm-cscope--parse-regexp line)
     (let ((file (concat dir (match-string 1 line)))
           (line-number (string-to-number (match-string 3 line)))
           (text (match-string 4 line)))
@@ -125,7 +128,7 @@
       (if persistent (helm-highlight-current-line)))))
 
 (defun helm-cscope--transform (line)
-  (when (string-match "\\`\\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\(.*\\)" line)
+  (when (string-match helm-cscope--parse-regexp line)
     (format "%s: %s(%s) %s"
             (propertize (match-string 1 line) 'face 'helm-cscope-file-face)
             (propertize (match-string 2 line) 'face 'helm-cscope-function-face)
