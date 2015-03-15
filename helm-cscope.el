@@ -50,25 +50,22 @@
   "Face used to highlight line number in the *helm-cscope* buffer."
   :group 'helm-cscope)
 
-(defun helm-cscope--search (database search-type-arg)
-  (let (cmd-args database-file search-dir)
+(defun helm-cscope--search (dir db-name search-type-arg &optional args)
+  (let ((cmd-args (list "-f" db-name "-L"
+                        search-type-arg (concat helm-pattern ".*"))))
 
-    (setq search-dir (cscope-search-directory-hierarchy database))
-    (setq database-file
-          (if (file-regular-p database) database
-            (concat search-dir cscope-database-file)))
-    (setq cmd-args (list "-L" search-type-arg (concat helm-pattern ".*")))
+    (when (car args) (setq cmd-args (append (car args) cmd-args)))
 
     ;; The database file and the directory containing the database file
     ;; must both be writable.
-    (if (or (not (file-writable-p database-file))
-            (not (file-writable-p (file-name-directory database-file)))
+    (if (or (not (file-writable-p (concat dir db-name)))
+            (not (file-writable-p dir))
             cscope-option-do-not-update-database)
         (push "-d" cmd-args))
 
-    (setq default-directory search-dir)
+    (setq default-directory dir)
     (push cscope-program cmd-args)
-    (apply 'start-process (concat "helm-cscope" search-type-arg) nil cmd-args)))
+    (apply 'start-process (concat "cscope" search-type-arg) nil cmd-args)))
 
 (defun helm-cscope--fuzzy-goto-line (text line-number)
   (let ((fuzzy-search-text-regexp
@@ -134,16 +131,17 @@
             (propertize (match-string 3 line) 'face 'helm-cscope-lineno-face)
             (match-string 4 line))))
 
-(defun helm-cscope--make-source (dir arg)
+(defun helm-cscope--make-source (dir db-name search-type-arg &rest args)
   (helm-build-async-source dir
-    :candidates-process (lambda () (helm-cscope--search dir arg))
+    :candidates-process
+    (lambda () (helm-cscope--search dir db-name search-type-arg args))
     :real-to-display 'helm-cscope--transform
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
 
 (defalias 'helm-cscope-pop-mark 'cscope-pop-mark)
 
-(defun helm-cscope--find-common (arg)
+(defun helm-cscope--find-common (search-type-arg)
   (let ((cur-dir (cscope-search-directory-hierarchy
                   (file-name-directory (buffer-file-name))))
         (search-dir-list
@@ -153,8 +151,13 @@
     (unless (string= cur-dir (car (car search-dir-list)))
       (push (list cur-dir) search-dir-list))
     (helm :sources
-          (mapcar (lambda (e) (helm-cscope--make-source
-                               (cscope-search-directory-hierarchy (car e)) arg))
+          (mapcar (lambda (e)
+                    (helm-cscope--make-source
+                     (file-name-directory
+                      (cscope-search-directory-hierarchy (car e)))
+                     (if (file-regular-p (car e))
+                         (file-name-nondirectory (car e)) cscope-database-file)
+                     search-type-arg (cadr e)))
                   search-dir-list)
           :input (cscope-extract-symbol-at-cursor nil nil)
           :buffer "*Helm cscope*")))
