@@ -71,51 +71,52 @@
     (push cscope-program cmd-args)
     (apply 'start-process (concat "cscope" search-type-arg) nil cmd-args)))
 
-(defun helm-cscope--fuzzy-goto-line (text line-number)
-  (let ((fuzzy-search-text-regexp
-         (mapconcat 'regexp-quote
-                    (split-string text "[ \f\t\n\r\v]+\\|\\b" t) "\\s-*"))
-        old-point new-point forward-point backward-point line-end line-length)
+(defun helm-cscope--goto-line (text line-number)
+  ;; this is recommended instead of (goto-line line-number)
+  (save-restriction
+    (widen)
+    (goto-char (point-min))
+    (forward-line (1- line-number)))
 
-    ;; this is recommended instead of (goto-line line-number)
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (forward-line (1- line-number)))
+  (when cscope-fuzzy-search-range
+    (let ((fuzzy-search-text-regexp
+           (mapconcat 'regexp-quote
+                      (split-string text "[ \f\t\n\r\v]+\\|\\b" t) "\\s-*"))
+          old-point new-point forward-point backward-point line-end line-length)
 
-    (setq old-point (point))
+      (setq old-point (point))
 
-    ;; Calculate the length of the line specified by cscope.
-    (end-of-line)
-    (setq line-end (point))
-    (goto-char old-point)
-    (setq line-length (- line-end old-point))
+      ;; Calculate the length of the line specified by cscope.
+      (end-of-line)
+      (setq line-end (point))
+      (goto-char old-point)
+      (setq line-length (- line-end old-point))
 
-    ;; Search forward and backward for the pattern.
-    (setq forward-point (re-search-forward
-                         fuzzy-search-text-regexp
-                         (+ old-point
-                            cscope-fuzzy-search-range) t))
-    (goto-char old-point)
-    (setq backward-point (re-search-backward
-                          fuzzy-search-text-regexp
-                          (- old-point
-                             cscope-fuzzy-search-range) t))
-    (if forward-point
-        (progn
-          (if backward-point
-              (setq new-point
-                    (if (<= (- (- forward-point line-length)
-                               old-point)
-                            (- old-point backward-point))
-                        forward-point
-                      backward-point))
-            (setq new-point forward-point)))
-      (if backward-point
-          (setq new-point backward-point)
-        (setq new-point old-point)))
-    (goto-char new-point)
-    (beginning-of-line)))
+      ;; Search forward and backward for the pattern.
+      (setq forward-point (re-search-forward
+                           fuzzy-search-text-regexp
+                           (+ old-point
+                              cscope-fuzzy-search-range) t))
+      (goto-char old-point)
+      (setq backward-point (re-search-backward
+                            fuzzy-search-text-regexp
+                            (- old-point
+                               cscope-fuzzy-search-range) t))
+      (if forward-point
+          (progn
+            (if backward-point
+                (setq new-point
+                      (if (<= (- (- forward-point line-length)
+                                 old-point)
+                              (- old-point backward-point))
+                          forward-point
+                        backward-point))
+              (setq new-point forward-point)))
+        (if backward-point
+            (setq new-point backward-point)
+          (setq new-point old-point)))
+      (goto-char new-point)
+      (beginning-of-line))))
 
 (defun helm-cscope--open-file (dir line &optional persistent)
   (when (string-match helm-cscope--parse-regexp line)
@@ -124,7 +125,7 @@
           (text (match-string 4 line)))
       (unless persistent (ring-insert cscope-marker-ring (point-marker)))
       (find-file file)
-      (helm-cscope--fuzzy-goto-line text line-number)
+      (helm-cscope--goto-line text line-number)
       (if persistent (helm-highlight-current-line)))))
 
 (defun helm-cscope--transform (line)
