@@ -55,7 +55,7 @@
 
 (defun helm-cscope--search (dir db-name search-type-arg &optional args)
   (let ((cmd-args (list "-f" db-name "-L"
-                        search-type-arg (concat helm-pattern ".*"))))
+                        search-type-arg helm-pattern)))
 
     (when (car args) (setq cmd-args (append (car args) cmd-args)))
     (setq cmd-args (append (cscope-construct-custom-options-list) cmd-args))
