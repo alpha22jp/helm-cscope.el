@@ -126,6 +126,11 @@
       (helm-cscope--goto-line text line-number)
       (if persistent (helm-highlight-current-line)))))
 
+(defun helm-cscope--filter-candidates (candidates _source)
+  (remove-if-not
+   (lambda (e) (string-match helm-cscope--parse-regexp (cdr e)))
+   candidates))
+
 (defun helm-cscope--transform (line)
   (when (string-match helm-cscope--parse-regexp line)
     (format "%s: %s(%s) %s"
@@ -138,6 +143,7 @@
   (helm-build-in-buffer-source dir
     :init (lambda () (helm-cscope--search
                       dir db-name search-type-arg search-text args))
+    :filtered-candidate-transformer 'helm-cscope--filter-candidates
     :real-to-display 'helm-cscope--transform
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
