@@ -55,6 +55,7 @@
                         search-type-arg (concat helm-pattern ".*"))))
 
     (when (car args) (setq cmd-args (append (car args) cmd-args)))
+    (setq cmd-args (append (cscope-construct-custom-options-list) cmd-args))
 
     ;; The database file and the directory containing the database file
     ;; must both be writable.
