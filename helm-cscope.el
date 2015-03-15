@@ -53,12 +53,10 @@
 (defconst helm-cscope--parse-regexp
   "\\`\\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\(.*\\)")
 
-(defun helm-cscope--search (dir db-name search-type-arg &optional args)
-  (let ((cmd-args (list "-f" db-name "-L"
-                        search-type-arg helm-pattern)))
-
-    (when (car args) (setq cmd-args (append (car args) cmd-args)))
-    (setq cmd-args (append (cscope-construct-custom-options-list) cmd-args))
+(defun helm-cscope--search (dir db-name search-type-arg search-text args)
+  (let ((cmd-args (append
+                   (list "-f" db-name "-L" search-type-arg search-text)
+                   args (cscope-construct-custom-options-list))))
 
     ;; The database file and the directory containing the database file
     ;; must both be writable.
@@ -67,9 +65,9 @@
             cscope-option-do-not-update-database)
         (push "-d" cmd-args))
 
-    (setq default-directory dir)
-    (push cscope-program cmd-args)
-    (apply 'start-process (concat "cscope" search-type-arg) nil cmd-args)))
+    (with-current-buffer (helm-candidate-buffer 'global)
+      (setq default-directory dir)
+      (apply #'call-process cscope-program nil t nil cmd-args))))
 
 (defun helm-cscope--goto-line (text line-number)
   ;; this is recommended instead of (goto-line line-number)
@@ -136,17 +134,17 @@
             (propertize (match-string 3 line) 'face 'helm-cscope-lineno-face)
             (match-string 4 line))))
 
-(defun helm-cscope--make-source (dir db-name search-type-arg &rest args)
-  (helm-build-async-source dir
-    :candidates-process
-    (lambda () (helm-cscope--search dir db-name search-type-arg args))
+(defun helm-cscope--make-source (dir db-name search-type-arg search-text args)
+  (helm-build-in-buffer-source dir
+    :init (lambda () (helm-cscope--search
+                      dir db-name search-type-arg search-text args))
     :real-to-display 'helm-cscope--transform
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
 
 (defalias 'helm-cscope-pop-mark 'cscope-pop-mark)
 
-(defun helm-cscope--find-common (search-type-arg)
+(defun helm-cscope--find-common (search-type-arg search-text)
   (let ((cur-dir (cscope-search-directory-hierarchy
                   (file-name-directory (buffer-file-name))))
         (search-dir-list
@@ -162,64 +160,84 @@
                       (cscope-search-directory-hierarchy (car e)))
                      (if (file-regular-p (car e))
                          (file-name-nondirectory (car e)) cscope-database-file)
-                     search-type-arg (cadr e)))
+                     search-type-arg search-text (cadr e)))
                   search-dir-list)
-          :input (cscope-extract-symbol-at-cursor nil nil)
           :buffer "*Helm cscope*")))
 
 ;;;###autoload
-(defun helm-cscope-find-this-symbol ()
+(defun helm-cscope-find-this-symbol (symbol)
   "Locate a symbol in source code."
-  (interactive)
-  (helm-cscope--find-common "-0"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find this symbol " nil nil t)))
+  (helm-cscope--find-common "-0" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-global-definition ()
+(defun helm-cscope-find-global-definition (symbol)
   "Find a symbol's global definition."
-  (interactive)
-  (helm-cscope--find-common "-1"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find this global definition " nil nil t)))
+  (helm-cscope--find-common "-1" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-called-function ()
+(defun helm-cscope-find-called-function (symbol)
   "Display functions called by a function."
-  (interactive)
-  (helm-cscope--find-common "-2"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find functions called by this function " nil nil t)))
+  (helm-cscope--find-common "-2" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-calling-this-funtcion ()
+(defun helm-cscope-find-calling-this-funtcion (symbol)
   "Display functions calling a function."
-  (interactive)
-  (helm-cscope--find-common "-3"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find functions calling this function " nil nil t)))
+  (helm-cscope--find-common "-3" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-this-text-string ()
+(defun helm-cscope-find-this-text-string (symbol)
   "Locate where a text string occurs."
-  (interactive)
-  (helm-cscope--find-common "-4"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find this text string " nil t nil)))
+  (helm-cscope--find-common "-4" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-egrep-pattern ()
+(defun helm-cscope-find-egrep-pattern (symbol)
   "Run egrep over the cscope database."
-  (interactive)
-  (helm-cscope--find-common "-6"))
+  (interactive
+   (list (let (cscope-no-mouse-prompts)
+           (cscope-prompt-for-symbol
+            "Find this egrep pattern " nil t t))))
+  (helm-cscope--find-common "-6" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-this-file ()
+(defun helm-cscope-find-this-file (symbol)
   "Locate a file."
-  (interactive)
-  (helm-cscope--find-common "-7"))
+  (interactive
+   (list (let (cscope-no-mouse-prompts)
+           (cscope-prompt-for-symbol
+            "Find this file " t nil t))))
+  (helm-cscope--find-common "-7" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-files-including-file ()
+(defun helm-cscope-find-files-including-file (symbol)
   "Locate all files #including a file."
-  (interactive)
-  (helm-cscope--find-common "-8"))
+  (interactive
+   (list (let (cscope-no-mouse-prompts)
+           (cscope-prompt-for-symbol
+            "Find files #including this file " t nil nil))))
+  (helm-cscope--find-common "-8" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-assignments-to-this-symbol ()
+(defun helm-cscope-find-assignments-to-this-symbol (symbol)
   "Locate assignments to a symbol in the source code."
-  (interactive)
-  (helm-cscope--find-common "-9"))
+  (interactive
+   (list (cscope-prompt-for-symbol
+          "Find assignments to this symbol " nil nil t)))
+  (helm-cscope--find-common "-9" symbol))
 
 (defvar helm-cscope-mode-name " Helm cscope")
 (defvar helm-cscope-mode-map (make-sparse-keymap))
