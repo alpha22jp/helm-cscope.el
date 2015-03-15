@@ -6,7 +6,7 @@
 ;; URL: https://github.com/alpha22jp/helm-cscope.el
 ;; Keywords: cscope, helm
 ;; Version: 0.1.0
-;; Package-Requires: ((xcscope "1.0") (helm "1.6.7") (cl-lib "0.5"))
+;; Package-Requires: ((xcscope "1.0") (helm "1.6.7") (cl-lib "0.5") (emacs "24.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@
       (if persistent (helm-highlight-current-line)))))
 
 (defun helm-cscope--filter-candidates (candidates _source)
-  (remove-if-not
+  (cl-remove-if-not
    (lambda (e) (string-match helm-cscope--parse-regexp (cdr e)))
    candidates))
 
