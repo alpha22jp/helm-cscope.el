@@ -167,24 +167,58 @@
           :buffer "*Helm cscope*")))
 
 ;;;###autoload
-(defun helm-cscope-find-symbol ()
+(defun helm-cscope-find-this-symbol ()
+  "Locate a symbol in source code."
   (interactive)
   (helm-cscope--find-common "-0"))
 
 ;;;###autoload
 (defun helm-cscope-find-global-definition ()
+  "Find a symbol's global definition."
   (interactive)
   (helm-cscope--find-common "-1"))
 
 ;;;###autoload
 (defun helm-cscope-find-called-function ()
+  "Display functions called by a function."
   (interactive)
   (helm-cscope--find-common "-2"))
 
 ;;;###autoload
 (defun helm-cscope-find-calling-this-funtcion ()
+  "Display functions calling a function."
   (interactive)
   (helm-cscope--find-common "-3"))
+
+;;;###autoload
+(defun helm-cscope-find-this-text-string ()
+  "Locate where a text string occurs."
+  (interactive)
+  (helm-cscope--find-common "-4"))
+
+;;;###autoload
+(defun helm-cscope-find-egrep-pattern ()
+  "Run egrep over the cscope database."
+  (interactive)
+  (helm-cscope--find-common "-6"))
+
+;;;###autoload
+(defun helm-cscope-find-this-file ()
+  "Locate a file."
+  (interactive)
+  (helm-cscope--find-common "-7"))
+
+;;;###autoload
+(defun helm-cscope-find-files-including-file ()
+  "Locate all files #including a file."
+  (interactive)
+  (helm-cscope--find-common "-8"))
+
+;;;###autoload
+(defun helm-cscope-find-assignments-to-this-symbol ()
+  "Locate assignments to a symbol in the source code."
+  (interactive)
+  (helm-cscope--find-common "-9"))
 
 (defvar helm-cscope-mode-name " Helm cscope")
 (defvar helm-cscope-mode-map (make-sparse-keymap))
