@@ -157,7 +157,9 @@
          (cl-remove-if-not
           (lambda (e) (and (listp e) (stringp (car e))))
           (cscope-find-info (file-name-directory (buffer-file-name))))))
-    (unless (string= cur-dir (car (car search-dir-list)))
+    (unless (cl-loop for e in search-dir-list
+                     thereis (string= cur-dir
+                                      (cscope-canonicalize-directory (car e))))
       (push (list cur-dir) search-dir-list))
     (helm :sources
           (mapcar (lambda (e)
