@@ -145,6 +145,7 @@
                       dir db-name search-type-arg search-text args))
     :filtered-candidate-transformer 'helm-cscope--filter-candidates
     :real-to-display 'helm-cscope--transform
+    :fuzzy-match t
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
 
