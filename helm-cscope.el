@@ -5,7 +5,7 @@
 ;; Author: alpha22jp <alpha22jp@gmail.com>
 ;; URL: https://github.com/alpha22jp/helm-cscope.el
 ;; Keywords: cscope, helm
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((xcscope "1.0") (helm "1.6.7") (cl-lib "0.5") (emacs "24.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
