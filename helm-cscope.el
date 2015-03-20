@@ -145,6 +145,7 @@
                       dir db-name search-type-arg search-text args))
     :filtered-candidate-transformer 'helm-cscope--filter-candidates
     :real-to-display 'helm-cscope--transform
+    :fuzzy-match t
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
 
@@ -157,7 +158,9 @@
          (cl-remove-if-not
           (lambda (e) (and (listp e) (stringp (car e))))
           (cscope-find-info (file-name-directory (buffer-file-name))))))
-    (unless (string= cur-dir (car (car search-dir-list)))
+    (unless (cl-loop for e in search-dir-list
+                     thereis (string= cur-dir
+                                      (cscope-canonicalize-directory (car e))))
       (push (list cur-dir) search-dir-list))
     (helm :sources
           (mapcar (lambda (e)
