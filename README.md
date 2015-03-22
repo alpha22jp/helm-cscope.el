@@ -34,7 +34,7 @@ Nothing required if you have already configured xcscope and helm. You can use `M
             (local-set-key (kbd "M-.") 'helm-cscope-find-global-definition)
             (local-set-key (kbd "M-@") 'helm-cscope-find-calling-this-funtcion)
             (local-set-key (kbd "M-s") 'helm-cscope-find-this-symbol)
-            (local-set-key (kbd "M-,") 'helm-cscope-pop-mark)))))
+            (local-set-key (kbd "M-,") 'helm-cscope-pop-mark))))
 ```
 
 ### Multiple database support
