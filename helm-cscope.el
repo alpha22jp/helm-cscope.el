@@ -118,11 +118,11 @@
 
 (defun helm-cscope--open-file (dir line &optional persistent)
   (when (string-match helm-cscope--parse-regexp line)
-    (let ((file (concat dir (match-string 1 line)))
+    (let ((file (match-string 1 line))
           (line-number (string-to-number (match-string 3 line)))
           (text (match-string 4 line)))
       (unless persistent (ring-insert cscope-marker-ring (point-marker)))
-      (find-file file)
+      (find-file (if (file-name-absolute-p file) file (concat dir file)))
       (helm-cscope--goto-line text line-number)
       (if persistent (helm-highlight-current-line)))))
 
