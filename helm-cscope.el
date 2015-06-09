@@ -118,11 +118,11 @@
 
 (defun helm-cscope--open-file (dir line &optional persistent)
   (when (string-match helm-cscope--parse-regexp line)
-    (let ((file (concat dir (match-string 1 line)))
+    (let ((file (match-string 1 line))
           (line-number (string-to-number (match-string 3 line)))
           (text (match-string 4 line)))
       (unless persistent (ring-insert cscope-marker-ring (point-marker)))
-      (find-file file)
+      (find-file (if (file-name-absolute-p file) file (concat dir file)))
       (helm-cscope--goto-line text line-number)
       (if persistent (helm-highlight-current-line)))))
 
@@ -131,20 +131,23 @@
    (lambda (e) (string-match helm-cscope--parse-regexp (cdr e)))
    candidates))
 
-(defun helm-cscope--transform (line)
+(defun helm-cscope--transform (dir line)
   (when (string-match helm-cscope--parse-regexp line)
-    (format "%s: %s(%s) %s"
-            (propertize (match-string 1 line) 'face 'helm-cscope-file-face)
-            (propertize (match-string 2 line) 'face 'helm-cscope-function-face)
-            (propertize (match-string 3 line) 'face 'helm-cscope-lineno-face)
-            (match-string 4 line))))
+    (let ((file (match-string 1 line)))
+      (format "%s: %s(%s) %s"
+              (propertize (if (file-name-absolute-p file)
+                              (replace-regexp-in-string dir "" file)
+                            file) 'face 'helm-cscope-file-face)
+              (propertize (match-string 2 line) 'face 'helm-cscope-function-face)
+              (propertize (match-string 3 line) 'face 'helm-cscope-lineno-face)
+              (match-string 4 line)))))
 
 (defun helm-cscope--make-source (dir db-name search-type-arg search-text args)
   (helm-build-in-buffer-source dir
     :init (lambda () (helm-cscope--search
                       dir db-name search-type-arg search-text args))
     :filtered-candidate-transformer 'helm-cscope--filter-candidates
-    :real-to-display 'helm-cscope--transform
+    :real-to-display (lambda (line) (helm-cscope--transform dir line))
     :fuzzy-match t
     :action (lambda (line) (helm-cscope--open-file dir line))
     :persistent-action (lambda (line) (helm-cscope--open-file dir line t))))
