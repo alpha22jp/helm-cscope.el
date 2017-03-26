@@ -201,7 +201,7 @@
   (helm-cscope--find-common "-2" symbol))
 
 ;;;###autoload
-(defun helm-cscope-find-calling-this-funtcion (symbol)
+(defun helm-cscope-find-calling-this-function (symbol)
   "Display functions calling a function."
   (interactive
    (list (cscope-prompt-for-symbol
