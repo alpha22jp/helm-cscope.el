@@ -32,7 +32,7 @@ Nothing required if you have already configured xcscope and helm. You can use `M
 (add-hook 'helm-cscope-mode-hook
           (lambda ()
             (local-set-key (kbd "M-.") 'helm-cscope-find-global-definition)
-            (local-set-key (kbd "M-@") 'helm-cscope-find-calling-this-funtcion)
+            (local-set-key (kbd "M-@") 'helm-cscope-find-calling-this-function)
             (local-set-key (kbd "M-s") 'helm-cscope-find-this-symbol)
             (local-set-key (kbd "M-,") 'helm-cscope-pop-mark))))
 ```
