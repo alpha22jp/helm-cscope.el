@@ -204,7 +204,7 @@
 
 ;;;###autoload
 (defun helm-cscope-find-global-definition-no-prompt()
-  "Locate a symbol in source code [no user prompting]."
+  "Find a symbol's global definition [no user prompting]."
   (interactive)
   (let ((symbol (cscope-extract-symbol-at-cursor nil nil)))
     (helm-cscope--find-common "-1" symbol)))
