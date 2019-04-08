@@ -289,6 +289,13 @@
           "Find assignments to this symbol " nil nil t)))
   (helm-cscope--find-common "-9" symbol))
 
+;;;###autoload
+(defun helm-cscope-find-assignments-to-this-symbol-no-prompt ()
+  "Locate assignments to a symbol in the source code[no user prompting]."
+  (interactive)
+  (let ((symbol (cscope-extract-symbol-at-cursor nil nil)))
+  (helm-cscope--find-common "-9" symbol)))
+
 (defvar helm-cscope-mode-name " Helm cscope")
 (defvar helm-cscope-mode-map (make-sparse-keymap))
 
