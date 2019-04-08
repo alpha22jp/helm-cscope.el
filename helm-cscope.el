@@ -273,6 +273,13 @@
   (helm-cscope--find-common "-7" symbol))
 
 ;;;###autoload
+(defun helm-cscope-find-this-file-no-prompt ()
+  "Locate a file [no user prompting]."
+  (interactive)
+  (let ((symbol (cscope-extract-symbol-at-cursor nil nil)))
+    (helm-cscope--find-common "-7" symbol)))
+
+;;;###autoload
 (defun helm-cscope-find-files-including-file (symbol)
   "Locate all files #including a file."
   (interactive
@@ -280,6 +287,12 @@
            (cscope-prompt-for-symbol
             "Find files #including this file " t nil nil))))
   (helm-cscope--find-common "-8" symbol))
+
+(defun helm-cscope-find-files-including-file-no-prompt ()
+  "Locate all files #including a file [no user prompting]."
+  (interactive)
+  (let ((symbol (cscope-extract-symbol-at-cursor nil nil)))
+  (helm-cscope--find-common "-8" symbol)))
 
 ;;;###autoload
 (defun helm-cscope-find-assignments-to-this-symbol (symbol)
