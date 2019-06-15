@@ -56,6 +56,9 @@
 (defvar helm-cscope-execute-action-if-one nil
   "Automatically perform action if result consists of only one row.")
 
+(defvar helm-cscope-after-display-hook nil
+  "Call hook after the select action has been processed.")
+
 (defconst helm-cscope--parse-regexp
   "\\`\\([^ ]+\\) \\([^ ]+\\) \\([0-9]+\\) \\(.*\\)")
 
@@ -80,7 +83,8 @@
   (save-restriction
     (widen)
     (goto-char (point-min))
-    (forward-line (1- line-number)))
+    (forward-line (1- line-number))
+    (run-hooks 'helm-cscope-after-display-hook))
 
   (when cscope-fuzzy-search-range
     (let ((fuzzy-search-text-regexp
